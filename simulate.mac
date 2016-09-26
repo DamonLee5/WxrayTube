@@ -1,0 +1,15 @@
+/control/verbose 2
+/control/saveHistory
+/run/verbose 2
+
+/run/beamOn 1000000
+/run/beamOn 1000000
+/run/beamOn 1000000
+/run/beamOn 1000000
+/run/beamOn 1000000
+/run/beamOn 1000000
+/run/beamOn 1000000
+/run/beamOn 1000000
+/run/beamOn 1000000
+/run/beamOn 1000000
+exit

@@ -1,0 +1,46 @@
+This simulation is done to generate the spectrum from a x ray tube with a tungsten anode.
+The tube is simulated using a particle gun that shoots mono-energetic electrons (of 35 keV) onto a tungsten block.
+A volume placed close to the tungsten block is used to record the x rays that happen to travel through it.
+The physics library used is Penelope since it has been shown (Geant4 Simulation of a filtered X-ray Source for Radiation Damare Studies, M. Guthoff, KIT) that it can reproduce the x ray spectra of a x ray tube.
+
+The classes implemented in the simulation are the following:
+
+StoreData:
+This class is used to store the x ray spectrum, it contains one histogram and produces one root file.
+There must be only one instance of the class for each run.
+
+DetectorConstruction:
+The class contains all the details concerning the detector geometry.
+
+RunAction:
+The methods of this class are called at the start and end of every run.
+At the begin of a run a seed is created for the random engine used in the simulation and the instance of StoreData initialized.
+At the end of the run the method of StoreData to write the root file is called and the StoreData instance is erased.
+
+EventAction:
+The methods of this class are called at the begin and end of every event.
+An event starts with the generation of a primary particle and ends when the daughters have been finished to propagate.
+The methods of this class are just used to print out the event number.
+
+SteppingAction:
+The methods of this class are called at every step of the propagation of a particle.
+A step starts with the interaction of a particle and ends with another.
+The crossing of a volume boundary is considered in the case as an interaction.
+The SteppingAction class methods are used to determine whether a gamma passes through the volume used to register the x ray spectrum.
+When a gamma passes in the volume its energy is recorded in the histogram of the StoreData class.
+
+PrimaryGeneratorAction:
+This class contains the definition of the particle gun used in the simulation.
+The method for the generation of a particle is called at the beginning of each event.
+
+PhysicsList:
+In this class are specified the particles used in the simulation and the physics of their interaction.
+The physics is from the Penelope library that contains electromagnetic phenomena.
+All the possible particles have been initialized in order to avoid errors while running the program.
+
+Further development:
+In order to make the simulation more close to our setup conditions the following improvements are possible:
+-define the geometry in a more realistic way (rotation angle of the tungsten block and placement of the volume used to record the x rays)
+-implement a spatial distribution of the particle hitting the tungsten (moving the particle gun around)
+-implement a smearing in the energy of the electron beam schooled at the tungsten
+-all the classes necessary to make the simulation parameters steerable with macros have been omitted in order to speed up the development, an implementation of these classes would result in a big improvement in flexibility of the code
