@@ -12,13 +12,13 @@ list(APPEND CMAKE_PREFIX_PATH /usr/local/opt/root)  # Update this path to your R
 find_package(Geant4 REQUIRED)
 
 # Find ROOT package
-find_package(ROOT REQUIRED COMPONENTS Hist RIO)
+# find_package(ROOT REQUIRED COMPONENTS Hist RIO)
 
 # Include Geant4 use file to set up necessary environment variables
 include(${Geant4_USE_FILE})
 
 # Include directories for ROOT and Geant4
-include_directories(${Geant4_INCLUDE_DIRS} ${ROOT_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include)
+# include_directories(${Geant4_INCLUDE_DIRS} ${ROOT_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include)
 
 # Source files
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
