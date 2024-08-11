@@ -13,7 +13,7 @@ EventAction::~EventAction()
 void EventAction::BeginOfEventAction(const G4Event* event)
 {
   G4int evtNum = event->GetEventID();
-  if(!(evtNum % 1000000)) G4cout << "Event " << evtNum << G4endl;
+  if(!(evtNum % 100)) G4cout << "Event " << evtNum << G4endl;
 
   return;
 }

@@ -9,83 +9,83 @@
 #include "G4UImanager.hh"
 #include "Randomize.hh"
 
-#ifdef G4VIS_USE
 #include "G4VisExecutive.hh"
-#endif
-
-#ifdef G4UI_USE
 #include "G4UIExecutive.hh"
-#endif
+
+void ExecuteBeamOnChunks(G4UImanager* UImanager, G4int numberOfChunks, G4int eventsPerChunk) {
+
+  for (G4int i = 0; i < numberOfChunks; ++i) {
+    std::stringstream command;
+    command << "/run/beamOn " << eventsPerChunk;
+    UImanager->ApplyCommand(command.str());
+  }
+
+}
 
 int main(int argc, char* argv[])
 {
-  // setting random generator
-  CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine()); // the seed is set at the beginning of each run
+  // Setting random generator
+  CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine()); // The seed is set at the beginning of each run
 
-  // construct the run manager
+  // Construct the run manager
   G4RunManager* runManager = new G4RunManager();
 
-  // instruction for the detector construction
+  // Instruction for the detector construction
   runManager->SetUserInitialization(new DetectorConstruction());
 
-  // physics list
+  // Physics list
   G4VModularPhysicsList* physicsList = new PhysicsList();
-  //G4VUserPhysicsList* physicsList = new PhysicsList();
   runManager->SetUserInitialization(physicsList);
 
-  // particle generation
+  // Particle generation
   runManager->SetUserAction(new PrimaryGeneratorAction());
 
-  // stepping action, here the particle passing the detector volume are measured
+  // Stepping action, here the particle passing the detector volume are measured
   runManager->SetUserAction(new SteppingAction());
 
-  // event action, eventually cout the event number
+  // Event action, eventually cout the event number
   runManager->SetUserAction(new EventAction());
 
-  // run action the instance of the class to store the data is initialized and the data saved at the end of the run
+  // Run action the instance of the class to store the data is initialized and the data saved at the end of the run
   runManager->SetUserAction(new RunAction());
 
-  // start the g4 kernel
+  // Start the G4 kernel
   runManager->Initialize();
 
-#ifdef G4VIS_USE
+  // Visualization manager
   G4VisManager* visManager = new G4VisExecutive();
   visManager->Initialize();
-#endif
 
   // Get the pointer to the User Interface manager
   G4UImanager* UImanager = G4UImanager::GetUIpointer();
 
-  if (argc!=1)
-    {
-      // batch mode
-      G4String command = "/control/execute ";
-      G4String fileName = argv[1];
-      UImanager->ApplyCommand(command+fileName);
-    }
+  if (argc != 1)
+  {
+    // Batch mode
+    G4String command = "/control/execute ";
+    G4String fileName = argv[1];
+    UImanager->ApplyCommand(command + fileName);
+
+    // Execute beamOn in chunks
+    G4int numberOfChunks = 100; // Total number of electrons
+    G4int eventsPerChunk = 1000; // Adjust the chunk size as needed
+
+    ExecuteBeamOnChunks(UImanager, numberOfChunks, eventsPerChunk);
+  
+  }
   else
-    {
-      // interactive mode : define UI session
-#ifdef G4UI_USE
-      G4UIExecutive* ui = new G4UIExecutive(argc, argv);
-#ifdef G4VIS_USE
-      UImanager->ApplyCommand("/control/execute init_vis.mac"); 
-#else
-      UImanager->ApplyCommand("/control/execute init.mac"); 
-#endif
-      ui->SessionStart();
-      delete ui;
-#endif
-    }
+  {
+    // Interactive mode: define UI session
+    G4UIExecutive* ui = new G4UIExecutive(argc, argv);
+    UImanager->ApplyCommand("/control/execute init_vis.mac"); 
+    ui->SessionStart();
+    delete ui;
+  }
 
-#ifdef G4VIS_USE
-  // to avoid the picture being killed immediately
-  // char a;
-  // std::cout << "\n\n\ninput any character to exit\n";
-  // std::cin >> a;
+  // Delete visualization manager
   delete visManager;
-#endif
 
+  // Delete run manager
   delete runManager;
 
   return 0;

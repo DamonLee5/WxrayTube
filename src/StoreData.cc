@@ -1,55 +1,77 @@
 #include "StoreData.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4ios.hh"
+#include <fstream>
+#include <iostream>
+#include <vector>
+#include <utility>
+#include <cmath>
+#include <iomanip>
 
-#include "TH1D.h"
-#include "TFile.h"
-
-#include "stdlib.h"
-
-#include "globals.hh"
-
-StoreData* StoreData::instance = 0;
+StoreData* StoreData::instance = nullptr;
 
 StoreData* StoreData::GetInstance()
 {
+  if (!instance)
+  {
+    G4Exception("StoreData::GetInstance", "StoreData", FatalException, "Instance not yet created!");
+  }
   return instance;
 }
 
-StoreData::StoreData(int runNum, int pid)
+void StoreData::Initialize(G4int runNum, G4int pid)
 {
-  if(instance != 0)
-    {
-      G4cout << "There is already an instance, a new one will not be created!" << G4endl;
-      return;
-    }
+  if (instance == nullptr)
+  {
+    instance = new StoreData(runNum, pid);
+  }
+}
 
-  instance = this;
+void StoreData::DeleteInstance()
+{
+  if (instance != nullptr)
+  {
+    delete instance;
+    instance = nullptr;
+  }
+}
 
-  char fileName[200];
-  sprintf(fileName, "output/outFileRun%ipid%i.root", runNum, pid);
-  outFile = new TFile(fileName, "RECREATE");
-  energySpectrum = new TH1D("energySpectrum", "Energy spectrum of the x-rays;Energy [keV];Number of entries", 800, 0, 40);
-  energySpectrum->SetFillColor(kBlue);
-  energySpectrum->SetLineColor(kRed);
+StoreData::StoreData(G4int runNum, G4int pid)
+  : nBins(1500), minEnergy(0.05), maxEnergy(150.05), binWidth((maxEnergy - minEnergy) / nBins)
+{
+  for (G4int i = 0; i < nBins; ++i)
+  {
+    G4double binCenter = minEnergy + (i + 0.5) * binWidth;
+    energySpectrum.push_back({binCenter, 0});
+  }
 }
 
 StoreData::~StoreData()
 {
-  instance = 0;
 }
 
-void StoreData::WriteData()
+void StoreData::FillEnergySpectrum(G4double eGamma)
 {
-  outFile->cd();
-
-  energySpectrum->Write();
-
-  outFile->Close();
-
-  return;
+  if (eGamma >= minEnergy && eGamma < maxEnergy)
+  {
+    // G4cout << "Update E spectrum." << G4endl;
+    G4int bin = static_cast<G4int>((eGamma - minEnergy) / binWidth);
+    energySpectrum[bin].second += 1;
+  }
+    else{
+    G4cout << minEnergy<<' '<<eGamma<<' '<<maxEnergy << G4endl;
+  }
 }
 
-void StoreData::FillEnergySpectrum(double eGamma)
+void StoreData::WriteCSV(const std::string& filename)
 {
-  energySpectrum->Fill(eGamma);
-  return;
+  std::ofstream outFile(filename);
+  outFile << "BinCenter, BinContent\n";
+  
+  for (const auto& bin : energySpectrum)
+  {
+    outFile << std::fixed << std::setprecision(2) << bin.first << ", " << bin.second << "\n";
+  }
+  
+  outFile.close();
 }

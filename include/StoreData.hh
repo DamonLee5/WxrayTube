@@ -1,32 +1,32 @@
-/**
- *This class is used to store the x ray spectrum.
- *It contains one histogram and produces a root file.
- *The class must have just one istance for each run so a method to retrieve the pointer to the object is implemented.
- *The instance is initialized in the RunAction class and there is deleted at the end of the run.
- *The method that fills the histogram is called in the SteppingAction.
- */
-
 #ifndef STOREDATA_H
 #define STOREDATA_H
 
-class TFile;
-class TH1D;
+#include "globals.hh"
+#include <vector>
+#include <utility>
+#include <string>
 
 class StoreData
 {
-  static StoreData* instance;
-  TFile* outFile;
-  TH1D* energySpectrum;
-
 public:
-  StoreData(int runNum, int pid);
-  ~StoreData();
+  static StoreData* GetInstance(); // Retrieve the pointer to the singleton instance
+  static void Initialize(G4int runNum, G4int pid); // Initialize the instance
+  static void DeleteInstance(); // Delete the instance
 
-  static StoreData* GetInstance(); // retrieve the pointer to the object of the class
+  void FillEnergySpectrum(G4double eGamma); // Fill the histogram
+  void WriteCSV(const std::string& filename); // Write data to a CSV file
 
-  void FillEnergySpectrum(double eGamma); // fill the histogram
+private:
+  StoreData(G4int runNum, G4int pid); // Private constructor
+  ~StoreData(); // Private destructor
 
-  void WriteData(); // write the root file with the histo
+  static StoreData* instance; // Singleton instance
+
+  std::vector<std::pair<G4double, G4double>> energySpectrum;
+  G4int nBins;
+  G4double minEnergy;
+  G4double maxEnergy;
+  G4double binWidth;
 };
 
-#endif // #ifndef STOREDATA_H
+#endif // STOREDATA_H

@@ -30,13 +30,16 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   G4Track* track = step->GetTrack();
   const G4ParticleDefinition* particle = track->GetParticleDefinition();
 
-  if(particle->GetParticleName() != "gamma") return; // select only the gammas
+  if(particle->GetParticleName() != "gamma"){
+    // G4cout << "No gamma " << G4endl;
+    return; // select only the gammas
+  } 
 
   G4double kinEnergy = track->GetKineticEnergy();
 
   StoreData::GetInstance()->FillEnergySpectrum(kinEnergy / keV);
 
-  //G4cout << "Seen " << particle->GetParticleName() << " with kin energy " << kinEnergy / keV << " keV in volume " << volume->GetName() << G4endl;
+  // G4cout << "Seen " << particle->GetParticleName() << " with kin energy " << kinEnergy / keV << " keV in volume " << volume->GetName() << G4endl;
 
   return;
 }
