@@ -63,7 +63,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Parameters of the G4Sphere
   G4double innerRadius = 25.*mm;              // Inner radius of the sphere
-  G4double outerRadius = 26.*mm;            // Outer radius of the sphere (100 mm as specified)
+  G4double outerRadius = 25.1*mm;            // Outer radius of the sphere (100 mm as specified)
   G4double startPhiAngle = 0.*deg;           // Starting phi angle (0 degrees)
   G4double deltaPhiAngle = 360.*deg;         // Total phi angle (360 degrees for a full circle)
   G4double startThetaAngle = 0.*deg;        // Starting theta angle (close to 90 deg for a plane-like shape)
