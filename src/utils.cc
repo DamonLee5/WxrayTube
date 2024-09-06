@@ -96,6 +96,12 @@ Config readConfig(const G4String &filename) {
                 std::istringstream valueStream(value);
                 valueStream >> val >> unit;
                 config.diamondThickness = val * G4UnitDefinition::GetValueOf(unit);
+            } else if (key == "srcdetDegree") {
+                G4double val;
+                G4String unit;
+                std::istringstream valueStream(value);
+                valueStream >> val >> unit;
+                config.srcdetDegree = val * G4UnitDefinition::GetValueOf(unit);
             }
         }
     }

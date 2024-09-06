@@ -12,6 +12,7 @@
 #include "G4VisAttributes.hh"
 #include "G4Colour.hh"
 #include "utils.hh"
+#include <cmath>
 using namespace CLHEP; // for units
 
 DetectorConstruction::DetectorConstruction()//:
@@ -41,7 +42,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4cout << *(G4Material::GetMaterialTable()) << G4endl;
 
   // parameters of the geometry
-  worldLength = 1 * cm;
+  worldLength = 10 * cm;
   // targetLength = 5 * cm;
   // targetRotation = 90 * deg;
   // targetCutAngle = 19 * deg;
@@ -63,7 +64,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4double detectorSizeXY = 2*mm;
   G4double targetThickness = 0 * um;
   G4double diamondThickness = 0 * um;
-  
+  G4double srcdetDegree = 1*deg;
   G4double detectorThickness = 0.2 * mm; // Thickness of the detector
   G4double gapThickness = 1.0 * mm; // Gap between the diamond and detector (adjust this as needed)
 
@@ -71,12 +72,18 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       Config config = readConfig("WxrayTube.cfg");
       targetThickness = config.targetThickness;
       diamondThickness = config.diamondThickness;
+      srcdetDegree = config.srcdetDegree;
       G4cout << "targetThickness = " << targetThickness / um << " um" << G4endl;
       G4cout << "diamondThickness = " << diamondThickness / um << " um" << G4endl;
+      G4cout << "srcdetDegree = " << srcdetDegree / deg << " deg" << G4endl;
   } catch (const std::exception &e) {
       G4Exception("main", "RuntimeError", FatalException, e.what());
       return physicalWorld;
   }  
+  detectorSizeXY = gapThickness * std::tan(srcdetDegree)*2;
+  if (detectorSizeXY == 0){
+      detectorSizeXY = 1*mm;
+  }
   // // solidTarget = new G4Box("target", targetLength / 2, targetLength / 2, targetLength / 2);
   // G4ThreeVector normCut(0, 0, 1);
   // normCut.rotateX(targetCutAngle);
@@ -110,14 +117,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4LogicalVolume* diamondLog = new G4LogicalVolume(diamondBox, diamond, "Diamond");
   new G4PVPlacement(nullptr, G4ThreeVector(0, 0, diamondThickness/2), diamondLog, "Diamond", logicalWorld, false, 0);
 
-  // 2. Create the Air Layer to fill the gap between Diamond and Detector
-  G4Box* airBox = new G4Box("AirLayer", detectorSizeXY/2, detectorSizeXY/2, gapThickness/2);
-  G4LogicalVolume* airLog = new G4LogicalVolume(airBox, air, "AirLayer");
-  new G4PVPlacement(nullptr, G4ThreeVector(0, 0, diamondThickness + gapThickness/2), airLog, "AirLayer", logicalWorld, false, 0);
+//   // 2. Create the Air Layer to fill the gap between Diamond and Detector
+//   G4Box* airBox = new G4Box("AirLayer", detectorSizeXY/2, detectorSizeXY/2, gapThickness/2);
+//   G4LogicalVolume* airLog = new G4LogicalVolume(airBox, air, "AirLayer");
+//   new G4PVPlacement(nullptr, G4ThreeVector(0, 0, diamondThickness + gapThickness/2), airLog, "AirLayer", logicalWorld, false, 0);
 
-  // Set the air layer to be gray
-  G4VisAttributes* grayColor = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5)); // Gray color
-  airLog->SetVisAttributes(grayColor);
+//   // Set the air layer to be gray
+//   G4VisAttributes* grayColor = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5)); // Gray color
+//   airLog->SetVisAttributes(grayColor);
 
   // 3. Create and place the Detector
   solidDetector = new G4Box("detector", detectorSizeXY / 2, detectorSizeXY / 2, detectorThickness / 2);
