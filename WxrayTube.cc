@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     UImanager->ApplyCommand(command + fileName);
 
     // Execute beamOn in chunks
-    G4int numberOfChunks = 100; // Total number of electrons
+    G4int numberOfChunks = 10; // Total number of electrons
     G4int eventsPerChunk = 1000; // Adjust the chunk size as needed
 
     ExecuteBeamOnChunks(UImanager, numberOfChunks, eventsPerChunk);
