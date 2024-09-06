@@ -9,6 +9,7 @@
 #include "G4VUserDetectorConstruction.hh"
 
 class G4Box;
+class G4Sphere;
 class G4CutTubs;
 class G4LogicalVolume;
 class G4VPhysicalVolume;
@@ -26,7 +27,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
   G4VPhysicalVolume* physicalTarget;
 
   // the sensitive volume to record the energy of the x rays
-  G4Box* solidDetector;
+  G4Sphere* solidDetector;
   G4LogicalVolume* logicalDetector;
   G4VPhysicalVolume* physicalDetector;
 

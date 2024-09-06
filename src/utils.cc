@@ -62,21 +62,26 @@ Config readConfig(const G4String &filename) {
     Config config;
     std::ifstream file(filename);
 
+    // Check if the file opens successfully
     if (!file.is_open()) {
         G4Exception("readConfig", "FileNotFound", FatalException, ("Could not open file: " + filename).c_str());
     }
 
     G4String line;
     while (std::getline(file, line)) {
-        // Remove comments and whitespace
+        // Remove comments (marked by ';')
         size_t pos = line.find(';');
         if (pos != G4String::npos) {
             line = line.substr(0, pos);
         }
-        line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
 
-        if (line.empty()) continue;
+        // Trim leading/trailing spaces (only remove them around the key and value)
+        line.erase(0, line.find_first_not_of(" \t"));
+        line.erase(line.find_last_not_of(" \t") + 1);
 
+        if (line.empty()) continue;  // Skip empty lines
+
+        // Extract key-value pairs
         std::istringstream lineStream(line);
         G4String key;
 
@@ -84,18 +89,32 @@ Config readConfig(const G4String &filename) {
             G4String value;
             std::getline(lineStream, value);
 
-            if (key == "targetThickness") {
-                G4double val;
-                G4String unit;
+            // Trim whitespace from key and value
+            key.erase(0, key.find_first_not_of(" \t"));
+            key.erase(key.find_last_not_of(" \t") + 1);
+            value.erase(0, value.find_first_not_of(" \t"));
+            value.erase(value.find_last_not_of(" \t") + 1);
+
+            G4double val;
+            G4String unit;
+
+            if (key == "targetThickness" || key == "diamondThickness" || key == "srcdetDegree") {
                 std::istringstream valueStream(value);
                 valueStream >> val >> unit;
-                config.targetThickness = val * G4UnitDefinition::GetValueOf(unit);
-            } else if (key == "diamondThickness") {
-                G4double val;
-                G4String unit;
-                std::istringstream valueStream(value);
-                valueStream >> val >> unit;
-                config.diamondThickness = val * G4UnitDefinition::GetValueOf(unit);
+
+                // Check if the unit exists before applying
+                if (G4UnitDefinition::GetCategory(unit) == "") {
+                    G4Exception("readConfig", "InvalidUnit", FatalException, ("Invalid unit in config: " + unit).c_str());
+                }
+
+                // Set the appropriate values in the config struct
+                if (key == "targetThickness") {
+                    config.targetThickness = val * G4UnitDefinition::GetValueOf(unit);
+                } else if (key == "diamondThickness") {
+                    config.diamondThickness = val * G4UnitDefinition::GetValueOf(unit);
+                } else if (key == "srcdetDegree") {
+                    config.srcdetDegree = val * G4UnitDefinition::GetValueOf(unit);
+                }
             }
         }
     }

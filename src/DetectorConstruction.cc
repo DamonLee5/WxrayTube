@@ -1,6 +1,7 @@
 #include "DetectorConstruction.hh"
 
 #include "G4Box.hh"
+#include "G4Sphere.hh"
 #include "G4CutTubs.hh"
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
@@ -35,18 +36,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* diamond = new G4Material("Diamond", density, 1);
   diamond->AddElement(nistMaterials->FindOrBuildElement("C"), 1);
   G4Material* vacuum = nistMaterials->FindOrBuildMaterial("G4_Galactic");
-  G4Material* air = nistMaterials->FindOrBuildMaterial("G4_AIR");
   // print the defined materials
   G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
   G4cout << *(G4Material::GetMaterialTable()) << G4endl;
 
   // parameters of the geometry
-  worldLength = 1 * cm;
-  // targetLength = 5 * cm;
-  // targetRotation = 90 * deg;
-  // targetCutAngle = 19 * deg;
-  // targetRadius = 1.5 * cm;
-  // detectorLength = 5 * cm;
+  worldLength = 5 * cm;
 
   // volume definition and placement
   solidWorld = new G4Box("world", worldLength / 2, worldLength / 2, worldLength / 2);
@@ -65,42 +60,29 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4double diamondThickness = 0 * um;
   
   G4double detectorThickness = 0.2 * mm; // Thickness of the detector
-  G4double gapThickness = 1.0 * mm; // Gap between the diamond and detector (adjust this as needed)
+
+  // Parameters of the G4Sphere
+  G4double innerRadius = 25.*mm;              // Inner radius of the sphere
+  G4double outerRadius = 26.*mm;            // Outer radius of the sphere (100 mm as specified)
+  G4double startPhiAngle = 0.*deg;           // Starting phi angle (0 degrees)
+  G4double deltaPhiAngle = 360.*deg;         // Total phi angle (360 degrees for a full circle)
+  G4double startThetaAngle = 0.*deg;        // Starting theta angle (close to 90 deg for a plane-like shape)
+  G4double srcdetDegree = 2.*deg;         // Apex angle (2 degrees as specified)
 
   try {
       Config config = readConfig("WxrayTube.cfg");
       targetThickness = config.targetThickness;
       diamondThickness = config.diamondThickness;
+      srcdetDegree = config.srcdetDegree;
       G4cout << "targetThickness = " << targetThickness / um << " um" << G4endl;
       G4cout << "diamondThickness = " << diamondThickness / um << " um" << G4endl;
+      G4cout << "srcdetDegree = " << srcdetDegree / deg << " deg" << G4endl;
   } catch (const std::exception &e) {
       G4Exception("main", "RuntimeError", FatalException, e.what());
       return physicalWorld;
   }  
-  // // solidTarget = new G4Box("target", targetLength / 2, targetLength / 2, targetLength / 2);
-  // G4ThreeVector normCut(0, 0, 1);
-  // normCut.rotateX(targetCutAngle);
-  // solidTarget = new G4CutTubs("target",
-	// 		      0, // inner radius
-	// 		      targetRadius, // outer radius
-	// 		      targetLength / 2, // length
-	// 		      0, // starting phi angle in radiants (for e.g. a quarter of tube ess)
-	// 		      2 * pi, // stopping phi angle
-	// 		      G4ThreeVector(0, 0, -1), // external normal lower face
-	// 		      normCut // external normal upper face
-	// 		      );
-  // logicalTarget = new G4LogicalVolume(solidTarget, W, "target");
-  // // placement of the target with rotation
-  // G4RotationMatrix rot;
-  // rot.rotateY(-targetRotation);
-  // physicalTarget = new G4PVPlacement(G4Transform3D(rot, G4ThreeVector(10 * cm, 0 * cm, 0 * cm)), // rotated via the matrix, at 10, 0, 0
-	// 			     logicalTarget, // its logical volume
-	// 			     "target", // name
-	// 			     logicalWorld, // its mother volume
-	// 			     false, // no boolean operations
-	// 			     0); // copy number
-  
 
+  
   G4Box* tungstenBox = new G4Box("target", detectorSizeXY/2, detectorSizeXY/2, targetThickness/2);
   G4LogicalVolume* logicalTarget = new G4LogicalVolume(tungstenBox, W, "target");
   new G4PVPlacement(nullptr, G4ThreeVector(0, 0, -targetThickness/2), logicalTarget, "target", logicalWorld, false, 0);
@@ -110,25 +92,35 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4LogicalVolume* diamondLog = new G4LogicalVolume(diamondBox, diamond, "Diamond");
   new G4PVPlacement(nullptr, G4ThreeVector(0, 0, diamondThickness/2), diamondLog, "Diamond", logicalWorld, false, 0);
 
-  // 2. Create the Air Layer to fill the gap between Diamond and Detector
-  G4Box* airBox = new G4Box("AirLayer", detectorSizeXY/2, detectorSizeXY/2, gapThickness/2);
-  G4LogicalVolume* airLog = new G4LogicalVolume(airBox, air, "AirLayer");
-  new G4PVPlacement(nullptr, G4ThreeVector(0, 0, diamondThickness + gapThickness/2), airLog, "AirLayer", logicalWorld, false, 0);
-
-  // Set the air layer to be gray
-  G4VisAttributes* grayColor = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5)); // Gray color
-  airLog->SetVisAttributes(grayColor);
-
   // 3. Create and place the Detector
-  solidDetector = new G4Box("detector", detectorSizeXY / 2, detectorSizeXY / 2, detectorThickness / 2);
-  logicalDetector = new G4LogicalVolume(solidDetector, vacuum, "detector");
-  physicalDetector = new G4PVPlacement(0, // no rotation
-              G4ThreeVector(0, 0, diamondThickness + gapThickness + detectorThickness/2),
-              logicalDetector, // its logical volume
-              "detector", // name
-              logicalWorld, // its mother volume
-              false, // no boolean operations
-              0); // copy number
+
+
+  // Create the G4Sphere geometry with the parameters
+  solidDetector = new G4Sphere("detector",
+                                innerRadius,
+                                outerRadius,
+                                startPhiAngle,
+                                deltaPhiAngle,
+                                startThetaAngle,
+                                srcdetDegree);
+
+  // Create logical volume (you can choose a better name for "DetectorLogical")
+  logicalDetector = new G4LogicalVolume(solidDetector,
+                                        vacuum,
+                                        "detector");
+
+  // Position the detector (you can adjust the position according to your setup)
+  G4ThreeVector detectorPosition = G4ThreeVector(0, 0, 0);  // Centered at the origin
+
+  // Create physical volume
+  new G4PVPlacement(0,                           // No rotation
+                    detectorPosition,            // Position
+                    logicalDetector,             // Logical volume
+                    "detector",          // Name
+                    logicalWorld,                // Mother volume (assuming you have a world volume)
+                    false,                       // No boolean operations
+                    0,                           // Copy number
+                    true);                       // Check overlaps
 
   // visualization properties
   G4VisAttributes* worldVisAtt= new G4VisAttributes(G4Colour(1.0,1.0,1.0)); // white
