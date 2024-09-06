@@ -16,7 +16,7 @@ G4Material* CreateMaterial(const std::string& name, const std::string& formula, 
 struct Config {
     G4double targetThickness;
     G4double diamondThickness;
-    G4double srcdetDegree;    
+    G4double srcdetDegree;
 };
 
 
