@@ -3,7 +3,7 @@
 # increase precision
 /run/setCut  0.1 um
 
-/cuts/setLowEdge 1.0 eV
+# /cuts/setLowEdge 1.0 eV
 
 # enable atomic relaxation physics
 
