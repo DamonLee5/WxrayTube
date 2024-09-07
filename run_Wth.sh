@@ -19,8 +19,8 @@ do
         rm $CFG_FILE
     fi
     
-    echo "PHYSICSMODEL = ${PHYSICSMODEL};" >> $CFG_FILE
-    echo "targetThickness = ${THICKNESS} um;" > $CFG_FILE
+    echo "PhysicsModel = ${PHYSICSMODEL};" > $CFG_FILE
+    echo "targetThickness = ${THICKNESS} um;" >> $CFG_FILE
     echo "diamondThickness = ${DTHICKNESSES} um;" >> $CFG_FILE
     
     # Loop over srcdetDegree values
@@ -34,12 +34,13 @@ do
             echo "ENERGY = ${ENERGY} kVp;" >> $CFG_FILE
 
             # Create a temporary macro file with the current energy
-            for t in {1..200}
+            for t in {1..1}
             do 
                 seed1=$(date +%s%N | cut -b1-10)  # Seed based on the current time in nanoseconds
                 seed2=$(date +%s%N | cut -b11-20) # Another seed based on the time
                 MACRO_FILE="temp_macro_${t}.mac"
                 cp run.mac $MACRO_FILE
+                echo "" >> $MACRO_FILE
                 echo "/random/setSeeds $seed1 $seed2" >> $MACRO_FILE
                 echo "/gun/energy ${ENERGY} keV" >> $MACRO_FILE
 
@@ -53,7 +54,7 @@ do
         done
 
     done
-    cp temp_macro_0.mac temp_macro.mac
+    cp temp_macro_1.mac temp_macro.mac
     # Clean up temporary macro file
     rm temp_macro_*.mac
 
