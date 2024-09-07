@@ -57,6 +57,15 @@ G4Material* CreateMaterial(const std::string& name, const std::string& formula, 
 }
 
 
+// Helper function to trim whitespace from a string
+G4String trim(const G4String& str) {
+    size_t first = str.find_first_not_of(" \t");
+    size_t last = str.find_last_not_of(" \t");
+    if (first == G4String::npos || last == G4String::npos)
+        return ""; // String contains only whitespace
+    return str.substr(first, last - first + 1);
+}
+
 // Define the readConfig function
 Config readConfig(const G4String &filename) {
     Config config;
@@ -64,7 +73,8 @@ Config readConfig(const G4String &filename) {
 
     // Check if the file opens successfully
     if (!file.is_open()) {
-        G4Exception("readConfig", "FileNotFound", FatalException, ("Could not open file: " + filename).c_str());
+        G4Exception("readConfig", "FileNotFound", FatalException, 
+            ("Could not open file: " + filename).c_str());
     }
 
     G4String line;
@@ -75,11 +85,9 @@ Config readConfig(const G4String &filename) {
             line = line.substr(0, pos);
         }
 
-        // Trim leading/trailing spaces (only remove them around the key and value)
-        line.erase(0, line.find_first_not_of(" \t"));
-        line.erase(line.find_last_not_of(" \t") + 1);
-
-        if (line.empty()) continue;  // Skip empty lines
+        // Trim the line and skip empty lines
+        line = trim(line);
+        if (line.empty()) continue;
 
         // Extract key-value pairs
         std::istringstream lineStream(line);
@@ -90,30 +98,38 @@ Config readConfig(const G4String &filename) {
             std::getline(lineStream, value);
 
             // Trim whitespace from key and value
-            key.erase(0, key.find_first_not_of(" \t"));
-            key.erase(key.find_last_not_of(" \t") + 1);
-            value.erase(0, value.find_first_not_of(" \t"));
-            value.erase(value.find_last_not_of(" \t") + 1);
+            key = trim(key);
+            value = trim(value);
 
             G4double val;
             G4String unit;
 
-            if (key == "targetThickness" || key == "diamondThickness" || key == "srcdetDegree") {
+            // Handle different keys in the config file
+            if (key == "PhysicsModel") {
+                config.PhysicsModel = std::stoi(value); // No unit expected for PhysicsModel
+            } else if (key == "targetThickness" || key == "diamondThickness" || key == "srcdetDegree") {
                 std::istringstream valueStream(value);
                 valueStream >> val >> unit;
 
-                // Check if the unit exists before applying
-                if (G4UnitDefinition::GetCategory(unit) == "") {
-                    G4Exception("readConfig", "InvalidUnit", FatalException, ("Invalid unit in config: " + unit).c_str());
+                if (unit.empty()) {
+                    G4Exception("readConfig", "MissingUnit", FatalException, 
+                        ("Missing unit for " + key).c_str());
                 }
 
-                // Set the appropriate values in the config struct
+                // Validate unit existence and set config values accordingly
+                if (G4UnitDefinition::GetCategory(unit) == "") {
+                    G4Exception("readConfig", "InvalidUnit", FatalException, 
+                        ("Invalid unit in config: " + unit).c_str());
+                }
+
+                G4double unitValue = G4UnitDefinition::GetValueOf(unit);
+
                 if (key == "targetThickness") {
-                    config.targetThickness = val * G4UnitDefinition::GetValueOf(unit);
+                    config.targetThickness = val * unitValue;
                 } else if (key == "diamondThickness") {
-                    config.diamondThickness = val * G4UnitDefinition::GetValueOf(unit);
+                    config.diamondThickness = val * unitValue;
                 } else if (key == "srcdetDegree") {
-                    config.srcdetDegree = val * G4UnitDefinition::GetValueOf(unit);
+                    config.srcdetDegree = val * unitValue;
                 }
             }
         }

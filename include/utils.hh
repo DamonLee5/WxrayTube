@@ -17,6 +17,7 @@ struct Config {
     G4double targetThickness;
     G4double diamondThickness;
     G4double srcdetDegree;
+    int PhysicsModel;
 };
 
 

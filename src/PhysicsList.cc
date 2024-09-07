@@ -1,6 +1,9 @@
 #include "PhysicsList.hh"
 #include "G4ParticleTypes.hh"
 #include "G4EmPenelopePhysics.hh"
+#include "G4EmLivermorePhysics.hh"
+#include "G4EmStandardPhysics.hh"
+#include "G4EmStandardPhysics_option4.hh"
 #include "G4ProcessManager.hh"
 #include "G4PhysicsListHelper.hh"
 #include "G4Decay.hh"
@@ -19,9 +22,29 @@
 
 using namespace CLHEP; // for units
 
-PhysicsList::PhysicsList()
-  : builtInPhysicsList(new G4EmPenelopePhysics())
+PhysicsList::PhysicsList(int physicsModel)
 {
+  switch (physicsModel) {
+    case 1:
+      builtInPhysicsList = new G4EmPenelopePhysics();
+      G4cout << "Using G4EmPenelopePhysics" << G4endl;
+      break;
+    case 2:
+      builtInPhysicsList = new G4EmLivermorePhysics();
+      G4cout << "Using G4EmLivermorePhysics" << G4endl;
+      break;
+    case 3:
+      builtInPhysicsList = new G4EmStandardPhysics();
+      G4cout << "Using G4EmStandardPhysics" << G4endl;
+      break;
+    case 4:
+      builtInPhysicsList = new G4EmStandardPhysics_option4();
+      G4cout << "Using G4EmStandardPhysics_option4" << G4endl;
+      break;
+    default:
+      G4cerr << "Invalid PhysicsModel selected! Defaulting to G4EmPenelopePhysics." << G4endl;
+      builtInPhysicsList = new G4EmPenelopePhysics();
+  }
 }
 
 PhysicsList::~PhysicsList()

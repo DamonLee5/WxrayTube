@@ -13,7 +13,7 @@
 class PhysicsList : public G4VModularPhysicsList
 {
 public:
-  PhysicsList();
+  PhysicsList(int physicsModel);
   ~PhysicsList();
 
   void ConstructParticle();

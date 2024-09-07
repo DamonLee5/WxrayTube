@@ -11,6 +11,7 @@
 
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
+#include "utils.hh"
 
 void ExecuteBeamOnChunks(G4UImanager* UImanager, G4int numberOfChunks, G4int eventsPerChunk) {
 
@@ -29,12 +30,21 @@ int main(int argc, char* argv[])
 
   // Construct the run manager
   G4RunManager* runManager = new G4RunManager();
+  int PhysicsModel = 1;
+  try {
+      Config config = readConfig("WxrayTube.cfg");
+      PhysicsModel = config.PhysicsModel;
+      G4cout << "PhysicsModel = " << PhysicsModel << G4endl;
+  } catch (const std::exception &e) {
+      G4Exception("main", "RuntimeError", FatalException, e.what());
+      return 0;
+  }  
 
   // Instruction for the detector construction
   runManager->SetUserInitialization(new DetectorConstruction());
 
   // Physics list
-  G4VModularPhysicsList* physicsList = new PhysicsList();
+  G4VModularPhysicsList* physicsList = new PhysicsList(PhysicsModel);
   runManager->SetUserInitialization(physicsList);
 
   // Particle generation
